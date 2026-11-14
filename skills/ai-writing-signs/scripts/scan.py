@@ -8,7 +8,7 @@ Usage:
                             strip invisible/format Unicode; write cleaned text
 
 Heuristic only. Hits are candidates for a human (or model) to confirm in context.
-Stdlib only, Python 3.8+.
+Stdlib only, Python 3.9+.
 """
 import argparse
 import json

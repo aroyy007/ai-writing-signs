@@ -2,7 +2,7 @@
 
 [![ci](https://github.com/aroyy007/ai-writing-signs/actions/workflows/ci.yml/badge.svg)](https://github.com/aroyy007/ai-writing-signs/actions/workflows/ci.yml)
 [![release](https://img.shields.io/github/v/release/aroyy007/ai-writing-signs)](https://github.com/aroyy007/ai-writing-signs/releases/latest)
-![python](https://img.shields.io/badge/python-3.8%2B-blue)
+![python](https://img.shields.io/badge/python-3.9%2B-blue)
 ![dependencies](https://img.shields.io/badge/dependencies-none-brightgreen)
 [![license](https://img.shields.io/badge/license-MIT%20%2B%20CC%20BY--SA%204.0-lightgrey)](#license)
 
@@ -114,7 +114,7 @@ skills/ai-writing-signs/
   references/
     patterns.md          full pattern catalog, ineffective indicators, write-mode filter
     academic.md          papers, theses, rebuttals, grant proposals
-  scripts/scan.py        stdlib scanner (Python 3.8+)
+  scripts/scan.py        stdlib scanner (Python 3.9+)
 examples/                before/after sample
 tests/                   unittest suite + fixtures
 tools/build_skill.py     packages dist/ai-writing-signs.skill

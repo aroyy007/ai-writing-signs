@@ -77,4 +77,4 @@ Skip the table entirely if the text is clean; say so in one line.
 - `references/patterns.md`: full catalog with fixes, ineffective indicators, signs of
   human writing, write-mode filter. Read before any audit or rewrite.
 - `references/academic.md`: papers, theses, rebuttals, grant proposals.
-- `scripts/scan.py`: stdlib-only scanner (Python 3.8+). Edit its word lists there.
+- `scripts/scan.py`: stdlib-only scanner (Python 3.9+). Edit its word lists there.
