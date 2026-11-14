@@ -1,0 +1,14 @@
+{
+  "name": "ai-writing-signs",
+  "description": "Claude skill for detecting and removing signs of unedited AI writing.",
+  "owner": {
+    "name": "aroyy007"
+  },
+  "plugins": [
+    {
+      "name": "ai-writing-signs",
+      "source": "./",
+      "description": "Detect and remove signs of unedited AI writing; includes a stdlib Python scanner."
+    }
+  ]
+}
