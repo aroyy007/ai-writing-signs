@@ -1,5 +1,13 @@
 # ai-writing-signs
 
+[![ci](https://github.com/aroyy007/ai-writing-signs/actions/workflows/ci.yml/badge.svg)](https://github.com/aroyy007/ai-writing-signs/actions/workflows/ci.yml)
+[![release](https://img.shields.io/github/v/release/aroyy007/ai-writing-signs)](https://github.com/aroyy007/ai-writing-signs/releases/latest)
+![python](https://img.shields.io/badge/python-3.8%2B-blue)
+![dependencies](https://img.shields.io/badge/dependencies-none-brightgreen)
+[![license](https://img.shields.io/badge/license-MIT%20%2B%20CC%20BY--SA%204.0-lightgrey)](#license)
+
+![scan.py on an AI-heavy paper intro, then on the edited version](docs/assets/demo.gif)
+
 A Claude skill for finding and fixing the habits of unedited LLM text: era vocabulary
 ("delve", "tapestry", "leverage"), stock sentence templates ("not just X, but Y",
 "serves as a testament to"), leaked chatbot artifacts (`oaicite`,
@@ -47,7 +55,9 @@ cp -R ai-writing-signs/skills/ai-writing-signs ~/.claude/skills/
 
 **Claude.ai / Claude desktop**
 
-Build the `.skill` bundle and upload it under Settings → Capabilities → Skills:
+Download `ai-writing-signs.skill` from the
+[latest release](https://github.com/aroyy007/ai-writing-signs/releases/latest) and upload
+it under Settings → Capabilities → Skills. Or build it yourself:
 
 ```bash
 python3 tools/build_skill.py   # writes dist/ai-writing-signs.skill
@@ -71,20 +81,29 @@ pbpaste | python3 skills/ai-writing-signs/scripts/scan.py -
 python3 skills/ai-writing-signs/scripts/scan.py draft.md --clean -o draft.clean.md
 ```
 
-Sample output on `tests/fixtures/ai_sample.txt`:
-
-```
-words=105  score=49.5  per100=47.14  -> hard artifacts present: remove before anything else
-categories: vocab=8, artifact=4, significance=3, promo=3, notability=2, ...
-
-  L3  score=19.0  cats=6  words=42
-    vocab: testament | pivotal | interplay | vibrant | enduring
-    negpar: It's not just a town — it's
-    tailing: , highlighting
-```
-
 Scores are heuristics. Hits inside quotations or technical terms ("robust" in
 statistics) are not tells.
+
+## Before and after
+
+From [`examples/before.md`](examples/before.md), a paper introduction (score 25.6 per
+100 words, 3 of 3 paragraphs flagged):
+
+> To address this, we propose LiteQ, a novel and groundbreaking quantization framework
+> that not only reduces memory but also enhances accuracy, paving the way for efficient
+> on-device inference. Extensive experiments demonstrate that LiteQ achieves superior
+> performance, reducing memory by 4.1× while improving accuracy by 0.8 points on MMLU,
+> underscoring its effectiveness.
+
+After the skill's rewrite mode ([`examples/after.md`](examples/after.md), score 0):
+
+> We propose LiteQ, a quantization method for on-device inference. On MMLU it reduces
+> memory by 4.1× and improves accuracy by 0.8 points over the 16-bit baseline.
+> [needs evidence: comparison with the strongest quantization baselines, and the
+> latency numbers the first paragraph promises]
+
+The numbers stay exactly as they were. Where the original made a claim without
+support, the rewrite flags it for the author instead of making up a citation.
 
 ## Repository layout
 
@@ -96,8 +115,10 @@ skills/ai-writing-signs/
     patterns.md          full pattern catalog, ineffective indicators, write-mode filter
     academic.md          papers, theses, rebuttals, grant proposals
   scripts/scan.py        stdlib scanner (Python 3.8+)
+examples/                before/after sample
 tests/                   unittest suite + fixtures
 tools/build_skill.py     packages dist/ai-writing-signs.skill
+tools/make_assets.py     regenerates docs/assets (needs Pillow)
 ```
 
 ## Development
