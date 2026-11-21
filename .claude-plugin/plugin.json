@@ -1,7 +1,7 @@
 {
   "name": "ai-writing-signs",
-  "version": "1.0.0",
-  "description": "Audit, rewrite, or draft text without the tells of unedited AI writing: era vocabulary, rhetorical templates, markup/citation artifacts, invisible Unicode, and academic over-claiming. Includes a stdlib Python scanner.",
+  "version": "1.1.0",
+  "description": "Audit, rewrite, or draft text without the tells of unedited AI writing: era vocabulary, rhetorical templates, markup/citation artifacts, invisible Unicode, tortured phrases, hidden text, and academic over-claiming. Includes a stdlib Python scanner.",
   "author": {
     "name": "aroyy007",
     "url": "https://github.com/aroyy007"
@@ -9,5 +9,11 @@
   "homepage": "https://github.com/aroyy007/ai-writing-signs",
   "repository": "https://github.com/aroyy007/ai-writing-signs",
   "license": "MIT AND CC-BY-SA-4.0",
-  "keywords": ["writing", "ai-detection", "editing", "academic-writing", "skill"]
+  "keywords": [
+    "writing",
+    "ai-detection",
+    "editing",
+    "academic-writing",
+    "skill"
+  ]
 }

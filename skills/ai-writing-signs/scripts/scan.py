@@ -5,7 +5,8 @@ Usage:
   scan.py FILE|-            text report
   scan.py FILE --json       JSON report
   scan.py FILE --clean [-o OUT] [--spaces]
-                            strip invisible/format Unicode; write cleaned text
+                            strip invisible/format Unicode, fix Cyrillic/Greek
+                            lookalikes inside Latin words; write cleaned text
 
 Heuristic only. Hits are candidates for a human (or model) to confirm in context.
 Stdlib only, Python 3.9+.
@@ -34,7 +35,7 @@ PATTERNS = [
         r"\[(?:insert|add|describe|your|placeholder|company name|founder)[^\]\n]{0,60}\]",
         r"\((?:add|insert) your [^)\n]{0,40}\)",
         r"\b20\d\d-XX-XX\b", r"\bINSERT_[A-Z_]+\d*\b", r"\bexample\.com/source\d*\b",
-        r"contentReference\[", r"\boaicite\b", r"\bturn\d+(?:search|news|view)\d+\b", r"【[^】]{0,40}†[^】]{0,40}】",
+        r"contentReference\[", r"\boaicite\b", r"\bturn\d+(?:search|news|view)\d+\b", r"\u3010[^\u3011]{0,40}\u2020[^\u3011]{0,40}\u3011",
         r"utm_source=(?:chatgpt\.com|openai|copilot\.com|perplexity)", r"referrer=grok\.com",
     ]),
     ("vocab", 1.0, words(
@@ -55,8 +56,8 @@ PATTERNS = [
     ]),
     ("negpar", 2.0, [
         r"\bnot (?:just|only|merely|simply)\b[^.?!\n]{0,80}\bbut\b",
-        r"\b(?:it|this|that)(?:'s| is)n?(?:'t| not)\b[^.?!\n]{0,60}[,;:—–-]\s*(?:it|this|that)(?:'s| is)\b",
-        r"\bisn't (?:just )?(?:a|an|about)\b[^.?!\n]{0,50}—",
+        r"\b(?:it|this|that)(?:'s| is)n?(?:'t| not)\b[^.?!\n]{0,60}[,;:\u2014\u2013-]\s*(?:it|this|that)(?:'s| is)\b",
+        r"\bisn't (?:just )?(?:a|an|about)\b[^.?!\n]{0,50}\u2014",
         r"\bno [a-z]+, no [a-z]+, just\b",
     ]),
     ("tailing", 2.0, [
@@ -113,7 +114,44 @@ PATTERNS = [
         "has (?:attracted|received) (?:significant|increasing|growing) attention",
         "with the rapid (?:development|advancement|growth) of", "in recent years",
     ) + [r"(?:^|[.!?]\s+)(?:Furthermore|Moreover),"]),
+    # Synonym-spun technical terms left by paraphrasing tools. Sources: Cabanac, Labbe &
+    # Magazinov 2021 (arXiv:2107.06751, Table 1) and the Problematic Paper Screener
+    # fingerprint list. Only pairs with no plausible legitimate use are included.
+    ("tortured", 3.0, words(
+        "(?:(?:profound|fake|counterfeit) )?neural organi[sz]ations?",
+        "brain organi[sz]ations?", "versatile organi[sz]ations?", "organi[sz]ation (?:ambush|assault)",
+        "(?:enormous|colossal|immense) information", "huge information",
+        "information (?:stockroom|distribution center)", "information mining", "information foci",
+        "(?:counterfeit|human-made) consciousness", "elite figuring", "haze figuring",
+        "designs preparing unit", "focal preparing unit", "work process motor",
+        "facial acknowledg(?:e)?ment", "discourse acknowledg(?:e)?ment", "design acknowledg(?:e)?ment",
+        "image acknowledg(?:e)?ment", "mean square (?:mistake|blunder)",
+        "mean (?:outright|supreme) (?:mistake|blunder)",
+        "(?:motion|flag|indicator|sign) to (?:clamor|commotion)",
+        "(?:arbitrary|irregular) get right of passage to", "(?:arbitrary|irregular) (?:backwoods|timberland|lush territory)",
+        "irregular esteem", "subterranean insect (?:state|province|settlement)",
+        "underground creepy crawly (?:state|province|area|region|settlement)",
+        "leftover vitality", "territorial normal vitality", "motor vitality",
+        "(?:credulous|gullible) bayes", "individual computeri[sz]ed collaborator",
+        "include choice", "illness conclusion", "k-closest neighbou?rs?",
+    )),
+    # Text hidden from human readers in LaTeX/HTML source: white or near-zero-size text.
+    ("hiddentext", 5.0, [
+        r"\\(?:text)?color\{white\}", r"\\color\[rgb\]\{1\s*,\s*1\s*,\s*1\}",
+        r"\\fontsize\{0(?:\.\d+)?(?:pt)?\}",
+        r"color\s*:\s*(?:white|#fff(?:fff)?|rgb\(\s*255\s*,\s*255\s*,\s*255\s*\))\b",
+        r"font-size\s*:\s*0(?:\.0*[1-9])?\s*(?:px|pt|em|rem)?\s*[;\"']", r"opacity\s*:\s*0(?:\.0+)?\s*[;\"']",
+    ]),
+    # Instructions planted for LLM-assisted reviewers or graders.
+    ("injection", 5.0, [
+        r"\bign" r"ore (?:all |any )?(?:previous|prior|above) (?:instructions|prompts)\b",
+        r"\b(?:give|write|provide) (?:only )?(?:a )?positive review\b",
+        r"\bdo not (?:highlight|mention) any (?:negatives|weaknesses)\b",
+        r"\b(?:for|to) (?:any )?(?:llm|ai|language model)s? (?:reviewer|reviewing|grader)s?\b",
+    ]),
 ]
+
+HARD = ("artifact", "hiddentext", "injection", "homoglyph")
 
 COMPILED = [(cat, w, [re.compile(p, re.I | re.M) for p in pats]) for cat, w, pats in PATTERNS]
 # Sentence-initial patterns must stay case-sensitive.
@@ -174,7 +212,44 @@ def scan_invisible(text):
     return counts
 
 
+# Cyrillic/Greek letters that render like Latin ones. Only flagged inside a word that
+# also has Latin letters, so real Russian/Greek words and maths like "\u0394x" are left alone.
+CONFUSABLE_TO_LATIN = {
+    # Cyrillic
+    "\u0430": "a", "\u0435": "e", "\u043e": "o", "\u0440": "p", "\u0441": "c", "\u0443": "y",
+    "\u0445": "x", "\u0456": "i", "\u0458": "j", "\u0455": "s", "\u0501": "d", "\u04cf": "l",
+    "\u0410": "A", "\u0412": "B", "\u0415": "E", "\u041a": "K", "\u041c": "M", "\u041d": "H",
+    "\u041e": "O", "\u0420": "P", "\u0421": "C", "\u0422": "T", "\u0425": "X", "\u0423": "Y",
+    "\u0406": "I", "\u0408": "J", "\u0405": "S",
+    # Greek
+    "\u03bf": "o", "\u039f": "O", "\u0391": "A", "\u0392": "B", "\u0395": "E", "\u0396": "Z",
+    "\u0397": "H", "\u0399": "I", "\u039a": "K", "\u039c": "M", "\u039d": "N", "\u03a1": "P",
+    "\u03a4": "T", "\u03a5": "Y", "\u03a7": "X", "\u03b9": "i", "\u03bd": "v",
+}
+_WORD = re.compile(r"[^\W\d_]+")
+
+
+def _is_latin(ch):
+    return ch.isascii() and ch.isalpha() or unicodedata.name(ch, "").startswith("LATIN")
+
+
+def _mixed(word):
+    return any(c in CONFUSABLE_TO_LATIN for c in word) and any(_is_latin(c) for c in word)
+
+
+def homoglyph_words(text):
+    """Return words that mix Latin letters with Cyrillic/Greek lookalikes."""
+    return [m.group(0) for m in _WORD.finditer(text) if _mixed(m.group(0))]
+
+
+def fix_homoglyphs(text):
+    """Replace lookalikes with Latin letters, only inside mixed-script words."""
+    return _WORD.sub(lambda m: "".join(CONFUSABLE_TO_LATIN.get(c, c) for c in m.group(0))
+                     if _mixed(m.group(0)) else m.group(0), text)
+
+
 def clean(text, spaces=False):
+    text = fix_homoglyphs(text)
     out = []
     for i, ch in enumerate(text):
         k = char_kind(ch)
@@ -198,11 +273,11 @@ def typography(text):
     heads = [l.lstrip("# ").strip() for l in lines if re.match(r"^#{1,6}\s", l)]
     title_case = sum(1 for h in heads if len(h.split()) >= 3 and
                      sum(w[:1].isupper() for w in h.split()[1:]) >= len(h.split()[1:]) * 0.8)
-    emoji_lead = sum(1 for l in lines if re.match(r"^\s*(?:[-*]\s*)?[\U0001F300-\U0001FAFF☀-➿]", l))
+    emoji_lead = sum(1 for l in lines if re.match(r"^\s*(?:[-*]\s*)?[\U0001F300-\U0001FAFF\u2600-\u27bf]", l))
     return {
-        "em_dash": text.count("—"),
-        "spaced_em_dash": len(re.findall(r" — ", text)),
-        "curly_quotes": len(re.findall(r"[“”‘’]", text)),
+        "em_dash": text.count("\u2014"),
+        "spaced_em_dash": len(re.findall(r" \u2014 ", text)),
+        "curly_quotes": len(re.findall(r"[\u201c\u201d\u2018\u2019]", text)),
         "markdown_bold": len(re.findall(r"\*\*[^*\n]+\*\*", text)),
         "bold_lead_bullets": len(re.findall(r"^\s*[-*\d.]+\s+\*\*[^*]+:\*\*", text, re.M)),
         "md_headings": len(heads),
@@ -238,6 +313,9 @@ def scan(text):
                 for m in r.finditer(p):
                     hits[cat].append(m.group(0).strip())
                     score += w
+        for word in homoglyph_words(p):
+            hits["homoglyph"].append(word)
+            score += 5.0
         if hits:
             for c, hs in hits.items():
                 totals[c] += len(hs)
@@ -248,15 +326,22 @@ def scan(text):
                 "preview": re.sub(r"\s+", " ", p)[:90],
             })
     density = round(100 * total_score / total_words, 2) if total_words else 0.0
-    if totals["artifact"]:
+    if totals["injection"] or totals["hiddentext"]:
+        verdict = "hidden text or reviewer-directed instructions present: inspect the source"
+    elif totals["homoglyph"]:
+        verdict = "lookalike characters inside words: run --clean, then rescan"
+    elif totals["artifact"]:
         verdict = "hard artifacts present: remove before anything else"
+    elif totals["tortured"]:
+        verdict = "tortured phrases present: likely paraphrasing-tool output, restore the standard terms"
     elif density < 1.5:
         verdict = "low density: likely reads clean"
     elif density < 4:
         verdict = "moderate: a few tics worth cutting"
     else:
         verdict = "high density: structural rewrite, not word swaps"
-    flagged = [p for p in paras if p["score"] >= 4 or p["categories"] >= 3 or "artifact" in p["hits"]]
+    flagged = [p for p in paras if p["score"] >= 4 or p["categories"] >= 3
+               or any(c in p["hits"] for c in HARD + ("tortured",))]
     return {
         "words": total_words, "score": round(total_score, 1), "per_100_words": density,
         "verdict": verdict, "category_counts": dict(totals.most_common()),
@@ -300,7 +385,9 @@ def main():
             open(a.out, "w", encoding="utf-8").write(cleaned)
         else:
             sys.stdout.write(cleaned)
-        print(f"[clean] removed {removed} chars; {dict(scan_invisible(text))}", file=sys.stderr)
+        fixed = homoglyph_words(text)
+        print(f"[clean] removed {removed} chars; {dict(scan_invisible(text))}; "
+              f"fixed {len(fixed)} mixed-script words", file=sys.stderr)
         return
     r = scan(text)
     if a.json:

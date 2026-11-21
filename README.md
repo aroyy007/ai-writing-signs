@@ -18,8 +18,10 @@ It ships with `scan.py`, a dependency-free Python scanner that does the mechanic
 (counting and locating candidates per paragraph) so the model only has to judge the
 paragraphs it flags.
 
-This is an editing aid. It does not promise that text will pass an AI detector, and it
-is not meant to get around a venue's AI-use disclosure rules.
+This is an editing aid. It does not promise that text will pass an AI detector, it is
+not meant to get around a venue's AI-use disclosure rules, and it won't help disguise
+copied text to lower a similarity score. It does detect the traces that such tools leave.
+That makes it useful to reviewers and editors too.
 
 ## What it checks
 
@@ -31,8 +33,11 @@ is not meant to get around a venue's AI-use disclosure rules.
 | Attribution | "experts argue", "studies show", vague "associated with", media-coverage framing | scanner |
 | Formatting | bold-lead bullets, Title Case headings, emoji bullets, spaced em dashes, curly quotes | scanner stats |
 | Invisible Unicode | zero-width spaces, soft hyphens, bidi controls, tag characters, noncharacters | scanner, `--clean` strips them |
+| Lookalike letters | Cyrillic or Greek letters that look Latin (U+0430 "a", U+03BF "o") inside Latin words | scanner, `--clean` restores Latin |
+| Tortured phrases | "profound neural organization" for *deep neural network*, "irregular backwoods" for *random forest* | scanner (verified pairs only) |
+| Hidden text | white or zero-size text in `.tex`/HTML, instructions aimed at AI reviewers | scanner |
 | Academic text | over-claiming verbs, novelty padding, "sheds light on", claim–evidence gaps | scanner + `references/academic.md` |
-| Judgment-only | rule of three, elegant variation, superficial analysis, template sections | model, using `references/patterns.md` |
+| Judgment-only | rule of three, elegant variation, superficial analysis, template sections, paraphrase-tool term drift | model, using `references/patterns.md` |
 
 No single sign proves anything. The skill reports density: several patterns clustered
 in one paragraph.
@@ -139,6 +144,10 @@ a category, describe it in `references/patterns.md` and add a test.
   claim–evidence discipline and the grant-proposal mode.
 - [watermarks-remover](https://github.com/guillaumemeyer/watermarks-remover): the
   invisible-Unicode character classes.
+- Cabanac, Labbé & Magazinov (2021),
+  [Tortured phrases: A dubious writing style emerging in science](https://arxiv.org/abs/2107.06751),
+  and the [Problematic Paper Screener](https://dbrech.irit.fr/pls/apex/f?p=9999:24):
+  the tortured-phrase pairs.
 
 ## License
 
