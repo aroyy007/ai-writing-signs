@@ -118,10 +118,8 @@ PATTERNS = [
     # Magazinov 2021 (arXiv:2107.06751, Table 1) and the Problematic Paper Screener
     # fingerprint list. Only pairs with no plausible legitimate use are included.
     ("tortured", 3.0, words(
-        "(?:(?:profound|fake|counterfeit) )?neural organi[sz]ations?",
-        "brain organi[sz]ations?", "versatile organi[sz]ations?", "organi[sz]ation (?:ambush|assault)",
-        "(?:enormous|colossal|immense) information", "huge information",
-        "information (?:stockroom|distribution center)", "information mining", "information foci",
+        "(?:profound|fake|counterfeit) neural organi[sz]ations?", "organi[sz]ation (?:ambush|assault)",
+        "colossal information", "information (?:stockroom|distribution center)", "information foci",
         "(?:counterfeit|human-made) consciousness", "elite figuring", "haze figuring",
         "designs preparing unit", "focal preparing unit", "work process motor",
         "facial acknowledg(?:e)?ment", "discourse acknowledg(?:e)?ment", "design acknowledg(?:e)?ment",
@@ -133,21 +131,21 @@ PATTERNS = [
         "underground creepy crawly (?:state|province|area|region|settlement)",
         "leftover vitality", "territorial normal vitality", "motor vitality",
         "(?:credulous|gullible) bayes", "individual computeri[sz]ed collaborator",
-        "include choice", "illness conclusion", "k-closest neighbou?rs?",
+        "illness conclusion", "k-closest neighbou?rs?",
     )),
     # Text hidden from human readers in LaTeX/HTML source: white or near-zero-size text.
     ("hiddentext", 5.0, [
         r"\\(?:text)?color\{white\}", r"\\color\[rgb\]\{1\s*,\s*1\s*,\s*1\}",
         r"\\fontsize\{0(?:\.\d+)?(?:pt)?\}",
-        r"color\s*:\s*(?:white|#fff(?:fff)?|rgb\(\s*255\s*,\s*255\s*,\s*255\s*\))\b",
-        r"font-size\s*:\s*0(?:\.0*[1-9])?\s*(?:px|pt|em|rem)?\s*[;\"']", r"opacity\s*:\s*0(?:\.0+)?\s*[;\"']",
+        r"(?<![\w-])color\s*:\s*(?:white|#fff(?:fff)?|rgb\(\s*255\s*,\s*255\s*,\s*255\s*\))\s*(?=[;\"'}]|$)",
+        r"font-size\s*:\s*0(?:\.0\d*)?\s*(?:px|pt|em|rem|%)?\s*(?=[;\"'}]|$)",
     ]),
     # Instructions planted for LLM-assisted reviewers or graders.
     ("injection", 5.0, [
-        r"\bign" r"ore (?:all |any )?(?:previous|prior|above) (?:instructions|prompts)\b",
-        r"\b(?:give|write|provide) (?:only )?(?:a )?positive review\b",
-        r"\bdo not (?:highlight|mention) any (?:negatives|weaknesses)\b",
-        r"\b(?:for|to) (?:any )?(?:llm|ai|language model)s? (?:reviewer|reviewing|grader)s?\b",
+        r"\bignore (?:all |any )?(?:previous|prior|above) (?:instructions|prompts)\b",
+        r"\b(?:give|write|output|provide) only (?:a )?positive (?:review|feedback|assessment)\b",
+        r"\bdo not (?:highlight|mention|point out) any (?:negatives|weaknesses|flaws)\b",
+        r"\brecommend (?:this paper|this submission|it) for acceptance regardless\b",
     ]),
 ]
 
@@ -224,7 +222,7 @@ CONFUSABLE_TO_LATIN = {
     # Greek
     "\u03bf": "o", "\u039f": "O", "\u0391": "A", "\u0392": "B", "\u0395": "E", "\u0396": "Z",
     "\u0397": "H", "\u0399": "I", "\u039a": "K", "\u039c": "M", "\u039d": "N", "\u03a1": "P",
-    "\u03a4": "T", "\u03a5": "Y", "\u03a7": "X", "\u03b9": "i", "\u03bd": "v",
+    "\u03a4": "T", "\u03a5": "Y", "\u03a7": "X",
 }
 _WORD = re.compile(r"[^\W\d_]+")
 
@@ -327,7 +325,8 @@ def scan(text):
             })
     density = round(100 * total_score / total_words, 2) if total_words else 0.0
     if totals["injection"] or totals["hiddentext"]:
-        verdict = "hidden text or reviewer-directed instructions present: inspect the source"
+        verdict = ("hidden-text candidates or reviewer-directed instructions: check whether the text "
+                   "is visible in the rendered document")
     elif totals["homoglyph"]:
         verdict = "lookalike characters inside words: run --clean, then rescan"
     elif totals["artifact"]:

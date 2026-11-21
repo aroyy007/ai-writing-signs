@@ -1,0 +1,55 @@
+# SkillSpector baseline — findings listed here are suppressed on future scans.
+# Edit 'reason' fields and add glob 'rules' as needed. See docs/SUPPRESSION.md.
+version: 2
+scanner_version: 2.12.0
+rules: []
+fingerprints:
+- hash: sha256:e645012a90d05792c969aa11c37cdcdfd49fd9dc0e72e0358a3ad4050970a5eb
+  rule_id: AST3
+  file: tests/test_scan.py
+  reason: 'Repo-only test data and dev tooling, not part of the installed skill: tests/fixtures
+    holds deliberate adversarial samples for scan.py''s own tests; tests and tools/
+    use importlib/subprocess to run scan.py; LICENSE-DOCS.md lists file paths for
+    attribution.'
+- hash: sha256:5ac3fc72d6c1d6deda355c8560abfb14d20964925f26142d4007b8921fa234bb
+  rule_id: AST3
+  file: tests/test_scan.py
+  reason: 'Repo-only test data and dev tooling, not part of the installed skill: tests/fixtures
+    holds deliberate adversarial samples for scan.py''s own tests; tests and tools/
+    use importlib/subprocess to run scan.py; LICENSE-DOCS.md lists file paths for
+    attribution.'
+- hash: sha256:cfb72ab1d9977b86cf200f8fa2a6b16a465f60e72f415127d7ade4af791caa89
+  rule_id: AST4
+  file: tests/test_scan.py
+  reason: 'Repo-only test data and dev tooling, not part of the installed skill: tests/fixtures
+    holds deliberate adversarial samples for scan.py''s own tests; tests and tools/
+    use importlib/subprocess to run scan.py; LICENSE-DOCS.md lists file paths for
+    attribution.'
+- hash: sha256:80e412526a2dc58e262c09f3d13495c56d4e09335ef5c8fb798f421eb9e7073e
+  rule_id: AST4
+  file: tools/make_assets.py
+  reason: 'Repo-only test data and dev tooling, not part of the installed skill: tests/fixtures
+    holds deliberate adversarial samples for scan.py''s own tests; tests and tools/
+    use importlib/subprocess to run scan.py; LICENSE-DOCS.md lists file paths for
+    attribution.'
+- hash: sha256:4dfa732ac57ef07e96d080c8d56cfbfc9f8b01b687d0f1fc2f596a76c7216964
+  rule_id: AS3
+  file: LICENSE-DOCS.md
+  reason: 'Repo-only test data and dev tooling, not part of the installed skill: tests/fixtures
+    holds deliberate adversarial samples for scan.py''s own tests; tests and tools/
+    use importlib/subprocess to run scan.py; LICENSE-DOCS.md lists file paths for
+    attribution.'
+- hash: sha256:64ed4195f1695be20640dec84198cb68c44d6a88f617942ee563a38f017c0232
+  rule_id: P1
+  file: tests/fixtures/reviewer_injection_sample.txt
+  reason: 'Repo-only test data and dev tooling, not part of the installed skill: tests/fixtures
+    holds deliberate adversarial samples for scan.py''s own tests; tests and tools/
+    use importlib/subprocess to run scan.py; LICENSE-DOCS.md lists file paths for
+    attribution.'
+- hash: sha256:c0be4b3f1dc84d5e89624fd084d53e180662e9168c48829f1fa30da9ed583ef7
+  rule_id: YR4
+  file: tests/fixtures/reviewer_injection_sample.txt
+  reason: 'Repo-only test data and dev tooling, not part of the installed skill: tests/fixtures
+    holds deliberate adversarial samples for scan.py''s own tests; tests and tools/
+    use importlib/subprocess to run scan.py; LICENSE-DOCS.md lists file paths for
+    attribution.'

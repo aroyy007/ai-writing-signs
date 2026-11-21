@@ -110,6 +110,24 @@ After the skill's rewrite mode ([`examples/after.md`](examples/after.md), score 
 The numbers stay exactly as they were. Where the original made a claim without
 support, the rewrite flags it for the author instead of making up a citation.
 
+## Security scan
+
+The skill itself scans clean with [NVIDIA SkillSpector](https://github.com/NVIDIA/skillspector)
+(7/100, SAFE; the one note is that SKILL.md declares no `allowed-tools`):
+
+```bash
+skillspector scan skills/ai-writing-signs --no-llm
+```
+
+Scanning the whole repository also picks up `tests/fixtures/`, which holds deliberate
+adversarial samples (a planted reviewer instruction) that the scanner's own tests need,
+plus test and build code that runs `scan.py` through `subprocess`. Those findings are
+recorded, with the reason, in `.skillspector-baseline.yaml`:
+
+```bash
+skillspector scan . --no-llm --use-shipped-baseline   # 0/100, SAFE
+```
+
 ## Repository layout
 
 ```
